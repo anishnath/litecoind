@@ -157,3 +157,123 @@ Get Image Vuln: Format (sha256:445d80972082e2dbcc7a9e38f0e7f098472702bcfd9b50274
 Input Basic Authorization:
 Vun Report Generated sha256:445d80972082e2dbcc7a9e38f0e7f098472702bcfd9b50274d4d152cc246cf0520210709-131246.csv
 ```
+
+## Kuberenetes (statefulset)
+
+I'm using my [own kubernetes tool](https://8gwifi.org/kube.jsp)  for kubernetes statefull set configuration
+
+```yaml
+#kubernetes YAML file for the Service litecoind.yml
+#This is Service Configuration Kube definition
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litecoind.service
+  namespace: default
+spec:
+  ports:
+  - name: rpcport
+    port: 9333
+    protocol: tcp
+    targetPort: 9333
+  selector:
+    app: litecoind
+  type: NodePort
+
+#This is StatefulSet Configuration Kube definition
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: litecoind
+  name: litecoind.statefulset
+  namespace: default
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: litecoind
+  serviceName: litecoind.service
+  template:
+    metadata:
+      labels:
+        app: litecoind
+      namespace: default
+    spec:
+      containers:
+      - image: anishnath/litecoind
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9333
+          name: portname.0
+          protocol: tcp
+        volumeMounts:
+        - mountPath: /litecoin-data
+          name: pvo.0
+        - mountPath: /litecoin-conf
+          name: pvo.1
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: pvo.0
+        persistentVolumeClaim:
+          claimName: claimname.0
+      - name: pvo.1
+        persistentVolumeClaim:
+          claimName: claimname.1
+  volumeClaimTemplates:
+  - accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+    volumeName: pvo.0
+  - accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+    volumeName: pvo.1
+
+
+#This is PersistentVolume Kube Object with Name
+#pvo.0.yml
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvo.0
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: $PWD
+    type: Directory
+  persistentVolumeReclaimPolicy: Retain
+
+#This is PersistentVolume Kube Object with Name
+#pvo.1.yml
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvo.1
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: $PWD/conf/litecoind.conf
+    type: Directory
+  persistentVolumeReclaimPolicy: Retain
+```
+
+
