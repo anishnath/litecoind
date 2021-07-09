@@ -69,8 +69,29 @@ docker run  \
     anishnath/litecoind
 ```
 
+Using docker-compose.yml
 
-Or Create a **[volume](https://docs.docker.com/storage/volumes/#create-and-manage-volumes)** for the litecoin data and conf for [litecoind.conf](https://litecoin.info/index.php/Litecoin.conf) file
+```
+services:
+  litecoind:
+    image: anishnath/litecoind
+    ports:
+    - 9333:9333
+    volumes:
+    - $PWD:/litecoin-data
+    - $PWD/conf/litecoind.conf:/litecoin-conf
+version: '3'
+```
+
+```
+docker-compose -f docker-compose.yml up
+```
+
+
+We can use docker volume also 
+
+
+Create a **[volume](https://docs.docker.com/storage/volumes/#create-and-manage-volumes)** for the litecoin data and conf for [litecoind.conf](https://litecoin.info/index.php/Litecoin.conf) file
 
 ```bash
 docker volume create --name=litecoind-data

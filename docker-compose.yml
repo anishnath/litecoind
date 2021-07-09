@@ -1,0 +1,9 @@
+services:
+  litecoind:
+    image: anishnath/litecoind
+    ports:
+    - 9333:9333
+    volumes:
+    - $PWD:/litecoin-data
+    - $PWD/conf/litecoind.conf:/litecoin-conf
+version: '3'
